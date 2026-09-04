@@ -2,53 +2,51 @@ import numpy as np
 from src.bs import bs_price, delta
 from src.mc import gbm_paths
 
-def simulate_hedge(S0, K, T, r, iv_sold, sigma_realized, steps):
-    dt = T / steps
+def simulate_hedge_on_path(path, S0, K, T, r, iv_sold, hedge_interval_days, fine_steps):
+    # path is a single, already-generated fine-resolution price path.
+    # hedge_interval_days controls how often we ACT on it — everything else fixed.
+    fine_dt = T / fine_steps
+    steps_per_hedge = max(1, round(hedge_interval_days / (T*365/fine_steps)))
 
-    path = gbm_paths(S0, r, sigma_realized, T, steps, n_paths=1)[0]
     cash = bs_price(S0, K, T, r, iv_sold, option='call')
+    position = 0.0
 
-    position = 0.0   # BTC currently held as hedge - this section is for hedging us selling a call (long delta)
-    log = []
-
-    for i in range(steps):
+    for i in range(0, fine_steps, steps_per_hedge):
         S = path[i]
-        tau = max(T - i*dt, 1e-9)   # time remaining, floored to avoid T=0
-
-        # delta of the call we SOLD, priced at iv_sold — that's our own model
+        tau = max(T - i*fine_dt, 1e-9)
         current_delta = delta(S, K, tau, r, iv_sold, option='call')
-        target_position = +current_delta   # short the call -> hedge by buying delta
-
+        target_position = current_delta
         trade_size = target_position - position
-        cash -= trade_size * S    # buying spends cash, selling raises it
+        cash -= trade_size * S
         position = target_position
-
-        log.append({'day': i, 'S': S, 'delta': current_delta,
-                    'position': position, 'trade_size': trade_size, 'cash': cash})
 
     S_final = path[-1]
     payoff = max(S_final - K, 0)
-    final_pnl = cash + position * S_final - payoff
+    return cash + position * S_final - payoff
 
-    return final_pnl, log
-
-import numpy as np #this section below runs 50 simulations at different realized vol levels, giving pnls is we sold at 38% IV. 
 
 if __name__ == "__main__":
+    S0, K, T, r = 78000, 78000, 27/365, 0.0
     iv_sold = 0.38
-    n_runs = 50   # independent paths per vol level, to average out single-path noise
+    sigma_realized = 0.55
+    n_runs = 50
+    fine_steps = 648   # hourly resolution — fine enough for both strategies to sample from
 
-    print(f"Selling at iv_sold = {iv_sold*100:.0f}%\n")
-    print(f"{'realized_vol':>14} {'avg_pnl':>12}")
+    daily_pnls = []
+    hourly_pnls = []
 
-    for sigma_realized in [0.20, 0.30, 0.38, 0.45, 0.60, 0.80]:
-        pnls = []   # will collect one pnl per run at this vol level
+    for run in range(n_runs):
+        np.random.seed(run)   # SAME seed for both strategies this run —
+                                # guarantees they see the identical path
+        path = gbm_paths(S0, r, sigma_realized, T, fine_steps, n_paths=1)[0]
 
-        for run in range(n_runs):
-            pnl, log = simulate_hedge(S0=78000, K=78000, T=27/365, r=0.0,
-                                        iv_sold=iv_sold, sigma_realized=sigma_realized, steps=27)
-            pnls.append(pnl)
+        daily_pnl  = simulate_hedge_on_path(path, S0, K, T, r, iv_sold,
+                                             hedge_interval_days=1, fine_steps=fine_steps)
+        hourly_pnl = simulate_hedge_on_path(path, S0, K, T, r, iv_sold,
+                                             hedge_interval_days=1/24, fine_steps=fine_steps)
 
-        avg_pnl = np.mean(pnls)
-        print(f"{sigma_realized*100:>13.0f}% {avg_pnl:>12.2f}")
+        daily_pnls.append(daily_pnl)
+        hourly_pnls.append(hourly_pnl)
 
+    print(f"Daily hedging  — avg: {np.mean(daily_pnls):>10.2f}   std: {np.std(daily_pnls):>10.2f}")
+    print(f"Hourly hedging — avg: {np.mean(hourly_pnls):>10.2f}   std: {np.std(hourly_pnls):>10.2f}")
