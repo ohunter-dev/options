@@ -8,7 +8,7 @@ def simulate_hedge(S0, K, T, r, iv_sold, sigma_realized, steps):
     path = gbm_paths(S0, r, sigma_realized, T, steps, n_paths=1)[0]
     cash = bs_price(S0, K, T, r, iv_sold, option='call')
 
-    position = 0.0   # BTC currently held as hedge
+    position = 0.0   # BTC currently held as hedge - this section is for hedging us selling a call (long delta)
     log = []
 
     for i in range(steps):
@@ -32,11 +32,23 @@ def simulate_hedge(S0, K, T, r, iv_sold, sigma_realized, steps):
 
     return final_pnl, log
 
+import numpy as np #this section below runs 50 simulations at different realized vol levels, giving pnls is we sold at 38% IV. 
+
 if __name__ == "__main__":
-    pnl, log = simulate_hedge(S0=78000, K=78000, T=27/365, r=0.0,
-                                iv_sold=0.38, sigma_realized=0.38, steps=27)
-    print(f"Final P&L: {pnl:.2f}")
-    print("\nFirst 5 days:")
-    for row in log[:5]:
-        print(f"day={row['day']:>2}  S={row['S']:>8.0f}  delta={row['delta']:.4f}  "
-              f"position={row['position']:>7.4f}  trade={row['trade_size']:>8.4f}  cash={row['cash']:>10.2f}")
+    iv_sold = 0.38
+    n_runs = 50   # independent paths per vol level, to average out single-path noise
+
+    print(f"Selling at iv_sold = {iv_sold*100:.0f}%\n")
+    print(f"{'realized_vol':>14} {'avg_pnl':>12}")
+
+    for sigma_realized in [0.20, 0.30, 0.38, 0.45, 0.60, 0.80]:
+        pnls = []   # will collect one pnl per run at this vol level
+
+        for run in range(n_runs):
+            pnl, log = simulate_hedge(S0=78000, K=78000, T=27/365, r=0.0,
+                                        iv_sold=iv_sold, sigma_realized=sigma_realized, steps=27)
+            pnls.append(pnl)
+
+        avg_pnl = np.mean(pnls)
+        print(f"{sigma_realized*100:>13.0f}% {avg_pnl:>12.2f}")
+
