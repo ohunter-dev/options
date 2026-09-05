@@ -29,6 +29,25 @@ def price_book(book, S, r):
 
     return totals
 
+def scenario_grid(book, spot_range, vol_shift_range, r):
+    # spot_range: array of spot levels to test
+    # vol_shift_range: array of vol shifts (added to each position's own sigma)
+    results = np.zeros((len(vol_shift_range), len(spot_range)))
+
+    for i, vol_shift in enumerate(vol_shift_range):
+        for j, S in enumerate(spot_range):
+            # build a shifted copy of the book — same strikes/qty, vol bumped
+            shifted_book = []
+            for pos in book:
+                shifted_pos = pos.copy()
+                shifted_pos['sigma'] = pos['sigma'] + vol_shift
+                shifted_book.append(shifted_pos)
+
+            total = price_book(shifted_book, S, r)
+            results[i, j] = total['price']
+
+    return results
+
 if __name__ == "__main__":
     book = [
         {'K': 85000, 'T': 27/365, 'sigma': 0.36, 'type': 'call', 'qty': -10},
@@ -48,3 +67,15 @@ if __name__ == "__main__":
     net = price_book(book, S, r)
     for key, val in net.items():
         print(f"{key:>8}: {val:.4f}")
+
+    print("\n--- Scenario grid (book P&L) ---")
+    spot_range = np.array([70000, 74000, 78000, 82000, 86000, 90000])
+    vol_shift_range = np.array([-0.10, -0.05, 0.0, 0.05, 0.10])
+
+    grid = scenario_grid(book, spot_range, vol_shift_range, r)
+
+    header = "vol_shift\\spot  " + "  ".join(f"{s:>8}" for s in spot_range)
+    print(header)
+    for i, vol_shift in enumerate(vol_shift_range):
+            row = "  ".join(f"{grid[i,j]:>8.0f}" for j in range(len(spot_range)))
+            print(f"{vol_shift:>+13.2f}  {row}")
