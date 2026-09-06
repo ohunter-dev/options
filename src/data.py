@@ -19,6 +19,13 @@ def get_ticker(instrument_name):
     data = response.json()
     return data['result']
 
+def get_last_trades(instrument_name, count=200):
+    url = "https://www.deribit.com/api/v2/public/get_last_trades_by_instrument"
+    params = {"instrument_name": instrument_name, "count": count}
+    response = requests.get(url, params=params)
+    data = response.json()
+    return data['result']['trades']
+
 #pulling instruments/vol of btc options closest to strike but with time left to build vol surfacr
 if __name__ == "__main__":
     instruments = get_instruments()
