@@ -1,5 +1,5 @@
 import numpy as np
-from src.bs import bs_price, delta, gamma, vega, theta
+from src.bs import bs_price, delta, gamma, vega, theta, vanna, volga
 
 def price_position(position, S, r):
     # position is a dict describing one holding: strike, expiry, type, quantity
@@ -14,13 +14,16 @@ def price_position(position, S, r):
     pos_gamma = gamma(S, K, T, r, sigma) * qty
     pos_vega  = vega(S, K, T, r, sigma) * qty
     pos_theta = theta(S, K, T, r, sigma, option) * qty
+    pos_vanna = vanna(S, K, T, r, sigma) * qty
+    pos_volga = volga(S, K, T, r, sigma) * qty
 
     return {'price': price, 'delta': pos_delta, 'gamma': pos_gamma,
-            'vega': pos_vega, 'theta': pos_theta}
+            'vega': pos_vega, 'theta': pos_theta,
+            'vanna': pos_vanna, 'volga': pos_volga}
 
 # this def price_book function allows us to aggregate greeks
 def price_book(book, S, r):
-    totals = {'price': 0, 'delta': 0, 'gamma': 0, 'vega': 0, 'theta': 0}
+    totals = {'price': 0, 'delta': 0, 'gamma': 0, 'vega': 0, 'theta': 0, 'vanna': 0, 'volga': 0}
 
     for pos in book:
         result = price_position(pos, S, r)
@@ -61,7 +64,8 @@ if __name__ == "__main__":
         result = price_position(pos, S, r)
         print(f"K={pos['K']} {pos['type']:>4} qty={pos['qty']:>4}  "
               f"price={result['price']:>10.2f}  delta={result['delta']:>8.4f}  "
-              f"gamma={result['gamma']:>10.6f}  vega={result['vega']:>8.4f}  theta={result['theta']:>8.4f}")
+              f"gamma={result['gamma']:>10.6f}  vega={result['vega']:>8.4f}  theta={result['theta']:>8.4f}"
+              f"volga={result['volga']:>10.6f}  vanna={result['vanna']:>10.6f}")
 
     print("\n--- Book totals ---")
     net = price_book(book, S, r)
