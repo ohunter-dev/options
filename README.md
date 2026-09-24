@@ -81,7 +81,7 @@ The main thing this project is about: vanilla risk (delta, gamma,
 vega, theta, and their second-order extensions vanna/volga) is hedgeable with
 the underlying and other vanillas. Path-dependent risk (a barrier) is much
 harder to hedge with vanillas, and with the barrier checked at discrete points
-there's no closed form, so the sharkfin gets priced with Monte Carlo instead.
+there's no closed form, so the sharkfin gets priced with Monte Carlo instead, rather than a straight extension of Black-Scholes
 I went with MC mainly to learn path simulation. The faster production route
 would be the continuous-monitoring closed form (Reiner-Rubinstein) with the
 Broadie-Glasserman-Kou barrier shift to adjust for discrete monitoring.

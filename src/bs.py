@@ -11,7 +11,7 @@ def bs_price(S, K, T, r, sigma, option='call'):
 
 
 #sigma*np.sqrt(T) in the denominator - vol scales with the square root of time, not linearly. 
-#This is why a 1-year option isn't "12x" as vol-exposed as a 1-month one, only √12 ≈ 3.46x. This square-root-of-time scaling will reappear constantly
+##This is why a 1-year option isn't 12x as vol-exposed as a 1-month one, only sqrt(12) ~ 3.46x. Same reason hedge frequency matters in hedging.py
 
 #defining delta: Differentiate: C − P = S − Ke^(−rT) with respect to S: Δ_call − Δ_put = 1.
 def delta(S, K, T, r, sigma, option='call'):
