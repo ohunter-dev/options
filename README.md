@@ -19,7 +19,7 @@ principles, using live BTC/ETH data from Deribit's public API.
 - `src/products.py` - decomposition and live pricing of dual-currency notes
   and risk reversals (reads real market skew via the surface module).
 - `src/mc.py` - GBM path simulation and Monte Carlo pricing of the sharkfin
-  (up-and-out barrier option) - no closed-form solution exists for this payoff.
+  (up-and-out barrier option) - no closed form under discrete monitoring, so MC.
 - `src/hedging.py` - delta-hedging P&L simulator: sells an option, dynamically
   hedges it along a simulated price path, and decomposes the result into the
   sold-vs-realized-vol identity, hedge-frequency effects, and transaction costs.
@@ -79,6 +79,9 @@ Stuff I've simplified on purpose, written down so it doesn't look like a bug:
 
 The main thing this project is about: vanilla risk (delta, gamma,
 vega, theta, and their second-order extensions vanna/volga) is hedgeable with
-the underlying and other vanillas. Path-dependent risk (a barrier) is not,
-which is why the sharkfin required an entirely different tool - Monte Carlo -
-rather than a closed-form extension of Black-Scholes.
+the underlying and other vanillas. Path-dependent risk (a barrier) is much
+harder to hedge with vanillas, and with the barrier checked at discrete points
+there's no closed form, so the sharkfin gets priced with Monte Carlo instead.
+I went with MC mainly to learn path simulation. The faster production route
+would be the continuous-monitoring closed form (Reiner-Rubinstein) with the
+Broadie-Glasserman-Kou barrier shift to adjust for discrete monitoring.
