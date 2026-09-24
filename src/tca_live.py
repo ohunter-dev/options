@@ -2,11 +2,10 @@ import numpy as np
 from src.data import get_last_trades
 from src.tca import compute_markouts
 
-# use the BTC perpetual — it's the most liquid, continuously-traded
-# instrument on Deribit, so we're maximizing the chance of clean, frequent trades
+# using the BTC perp, most liquid thing on deribit so best chance of clean frequent trades
 trades = get_last_trades("BTC-PERPETUAL", count=200)
 
-# Deribit returns most-recent-first; flip so we go chronologically forward
+# deribit gives newest first, flip it so it's in time order
 trades = list(reversed(trades))
 
 print(f"Pulled {len(trades)} trades")
@@ -23,11 +22,10 @@ def markout_from_tape(trades, reference_idx, horizons_seconds):
     for h in horizons_seconds:
         target_time = ref_time + h * 1000   # convert seconds to ms, Deribit's unit
 
-        # find the most recent trade whose timestamp is >= target_time
-        # this is our best proxy for "the market price at that moment"
+        # first trade at or after target_time, best guess at where the market was then
         future_trades = [t for t in trades if t['timestamp'] >= target_time]
         if not future_trades:
-            results[h] = None   # ran off the end of our pulled data
+            results[h] = None   # ran off the end of the data I pulled
             continue
 
         price_at_h = future_trades[0]['price']
@@ -44,8 +42,7 @@ if __name__ == "__main__":
     horizons_seconds = [1, 5, 15, 30, 60]
     all_results = {h: [] for h in horizons_seconds}
 
-    # use trades from index 20 to len-20, so every reference trade has
-    # enough history after it to actually compute a +60s markout
+    # only use trades 20 to len-20 so each one has enough tape after it for the +60s markout
     for i in range(20, len(trades) - 20):
         result = markout_from_tape(trades, i, horizons_seconds)
         for h in horizons_seconds:

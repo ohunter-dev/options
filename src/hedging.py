@@ -8,7 +8,7 @@ def simulate_hedge_on_path(path, S0, K, T, r, iv_sold, hedge_interval_days, fine
 
     cash = bs_price(S0, K, T, r, iv_sold, option='call')
     position = 0.0
-    total_cost = 0.0   # track cumulative transaction cost paid, so we can see it separately
+    total_cost = 0.0   # keep a running total of costs so I can see them on their own
 
     for i in range(0, fine_steps, steps_per_hedge):
         S = path[i]
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     sigma_realized = 0.55
     n_runs = 50
     fine_steps = 648
-    cost_bps = 5   # 5 basis points per trade — a plausible crypto spot spread/fee
+    cost_bps = 5   # 5bps per trade, roughly what crypto spot spread + fees look like
 
     daily_pnls, daily_costs = [], []
     hourly_pnls, hourly_costs = [], []
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         daily_pnls.append(d_pnl); daily_costs.append(d_cost)
         hourly_pnls.append(h_pnl); hourly_costs.append(h_cost)
 
-    print(f"Daily  — avg pnl: {np.mean(daily_pnls):>10.2f}  std: {np.std(daily_pnls):>10.2f}"
+    print(f"Daily  | avg pnl: {np.mean(daily_pnls):>10.2f}  std: {np.std(daily_pnls):>10.2f}"
           f"  avg cost paid: {np.mean(daily_costs):>8.2f}")
-    print(f"Hourly — avg pnl: {np.mean(hourly_pnls):>10.2f}  std: {np.std(hourly_pnls):>10.2f}"
+    print(f"Hourly | avg pnl: {np.mean(hourly_pnls):>10.2f}  std: {np.std(hourly_pnls):>10.2f}"
           f"  avg cost paid: {np.mean(hourly_costs):>8.2f}")

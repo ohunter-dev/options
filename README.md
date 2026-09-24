@@ -50,8 +50,7 @@ uv pip install -r requirements.txt
 
 ## Known simplifications
 
-Logged here deliberately - each is a genuine simplification
-made knowingly, not an oversight:
+Stuff I've simplified on purpose, written down so it doesn't look like a bug:
 
 - **r = 0 throughout.** Matches Deribit's own convention (`interest_rate: 0.0`
   in every ticker response) - not an approximation for this venue, but worth
@@ -63,13 +62,12 @@ made knowingly, not an oversight:
 - **No inverse/BTC-settlement adjustment.** Deribit's BTC options settle and
   are margined in BTC, not USD. This project treats them as standard USD-
   denominated vanillas after converting the BTC-denominated mark price to USD
-  at the prevailing forward. The fully rigorous treatment requires adjusting
-  the numeraire itself; this is a known, named approximation, not an
-  oversight.
+  at the prevailing forward. Doing it properly means changing the numeraire
+  itself, so I know this is an approximation.
 - **Barrier monitoring in the Monte Carlo sharkfin pricer is discrete**
   (checked once per simulated time step), not continuous. This understates
   the true knock-out probability relative to continuous monitoring. The
-  standard correction (Broadie–Glasserman–Kou barrier shift) is not applied.
+  standard correction (Broadie-Glasserman-Kou barrier shift) is not applied.
 - **The composite mid has no staleness filtering or outlier rejection** - it
   is a single live pull, volume-weighted across three venues, intended as a
   proof of the weighting mechanism rather than a production-grade index.
@@ -79,7 +77,7 @@ made knowingly, not an oversight:
 
 ## What this demonstrates
 
-The core distinction this project is built around: vanilla risk (delta, gamma,
+The main thing this project is about: vanilla risk (delta, gamma,
 vega, theta, and their second-order extensions vanna/volga) is hedgeable with
 the underlying and other vanillas. Path-dependent risk (a barrier) is not,
 which is why the sharkfin required an entirely different tool - Monte Carlo -

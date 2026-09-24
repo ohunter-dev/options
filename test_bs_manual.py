@@ -59,7 +59,7 @@ print("analytical theta:", analytical_theta)
 
 #plots below
 
-# Plot each greek's shape as spot varies, holding K, T, r, sigma fixed
+# Plot each greek's shape as spot varies, holding K, T, r, sigma fixed. Note gamma peak < vega peak < strike, always, whenever r>0.
 spots = np.linspace(50, 150, 200)   # 200 spot points from 50 to 150
 
 deltas = [delta(S, K=100, T=1, r=0.05, sigma=0.2, option='call') for S in spots]

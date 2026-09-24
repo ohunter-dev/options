@@ -21,7 +21,7 @@ for i in range(len(paths)):
 
 ax.axhline(B, color='black', linestyle='--', linewidth=1.5, label=f'Barrier ({B:,.0f})')
 ax.axhline(S0, color='gray', linestyle=':', linewidth=1, label=f'Spot ({S0:,.0f})')
-ax.set_title(f"Sample of {len(paths)} simulated paths — red = knocked out")
+ax.set_title(f"Sample of {len(paths)} simulated paths, red = knocked out")
 ax.set_xlabel("Day")
 ax.set_ylabel("BTC price")
 ax.legend()

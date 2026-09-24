@@ -16,13 +16,13 @@ fig, axs = plt.subplots(1, 2, figsize=(12, 5))
 
 axs[0].plot(strikes, smile_iv, marker='o', markersize=3)
 axs[0].axvline(spot, color='gray', linestyle='--', label='spot')
-axs[0].set_title(f"Vol smile — {days} day expiry")
+axs[0].set_title(f"Vol smile, {days} day expiry")
 axs[0].set_xlabel("Strike")
 axs[0].set_ylabel("Implied vol (%)")
 axs[0].legend()
 
 axs[1].plot(term_days, term_iv, marker='o', markersize=4)
-axs[1].set_title("Term structure — ATM IV")
+axs[1].set_title("Term structure, ATM IV")
 axs[1].set_xlabel("Days to expiry")
 axs[1].set_ylabel("ATM implied vol (%)")
 

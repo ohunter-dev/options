@@ -21,7 +21,7 @@ def price_position(position, S, r):
             'vega': pos_vega, 'theta': pos_theta,
             'vanna': pos_vanna, 'volga': pos_volga}
 
-# this def price_book function allows us to aggregate greeks
+# price_book just sums every position so I can see the net greeks for the whole book
 def price_book(book, S, r):
     totals = {'price': 0, 'delta': 0, 'gamma': 0, 'vega': 0, 'theta': 0, 'vanna': 0, 'volga': 0}
 
@@ -39,7 +39,7 @@ def scenario_grid(book, spot_range, vol_shift_range, r):
 
     for i, vol_shift in enumerate(vol_shift_range):
         for j, S in enumerate(spot_range):
-            # build a shifted copy of the book — same strikes/qty, vol bumped
+            # copy of the book with vol bumped, strikes and qty stay the same
             shifted_book = []
             for pos in book:
                 shifted_pos = pos.copy()

@@ -26,7 +26,7 @@ def get_last_trades(instrument_name, count=200):
     data = response.json()
     return data['result']['trades']
 
-#pulling instruments/vol of btc options closest to strike but with time left to build vol surfacr
+#pull btc options nearest the money with some time left, first step for building the vol surface
 if __name__ == "__main__":
     instruments = get_instruments()
     print("Number of live BTC options:", len(instruments))

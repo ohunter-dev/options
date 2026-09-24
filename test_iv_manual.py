@@ -21,7 +21,7 @@ inst = min(bucket, key=lambda i: abs(i['strike'] - spot))
 
 ticker = get_ticker(inst['instrument_name'])
 
-# Deribit prices options in BTC terms — convert mark_price to USD where possible, non inverse. Approximation...
+# deribit prices options in BTC so convert mark_price to USD and treat it as non inverse. approximation
 mark_price_btc = ticker['mark_price']
 spot_now = ticker['underlying_price']
 market_price_usd = mark_price_btc * spot_now

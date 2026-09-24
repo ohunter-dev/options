@@ -1,7 +1,7 @@
 from src.bs import bs_price, delta, gamma, vega, theta
 from src.surface import get_smile, interpolate_iv
 
-def dual_currency_note(notional, S, K, T, r, sigma): #DUAL CURRENCYNOTE DEFINITION
+def dual_currency_note(notional, S, K, T, r, sigma): #dual currency note
     call_price = bs_price(S, K, T, r, sigma, option='call')
     yield_pickup = call_price / S
     annualised_yield = yield_pickup / T
@@ -23,14 +23,14 @@ def dual_currency_note(notional, S, K, T, r, sigma): #DUAL CURRENCYNOTE DEFINITI
         'desk_vega': -client_vega, 'desk_theta': -client_theta,
     }
 
-#RISK REVERSAL STRUCTURE (client buys put, sells call - bearish delta). Desk long both delta (sells put, buy call)
+#risk reversal: client buys put, sells call so they're short delta. desk is the other side (short put, long call) so long delta
 def risk_reversal(notional, S, K_put, K_call, T, r, sigma_put, sigma_call): 
     btc_equiv = notional / S
 
     # client: long put at K_put, short call at K_call
     put_price  = bs_price(S, K_put, T, r, sigma_put, option='put')
     call_price = bs_price(S, K_call, T, r, sigma_call, option='call')
-    net_cost   = put_price - call_price   # positive = client pays a debit, negative = collects a credit
+    net_cost   = put_price - call_price   # +ve = client pays a debit, -ve = they collect a credit
 
     client_delta = (delta(S, K_put, T, r, sigma_put, option='put')
                    - delta(S, K_call, T, r, sigma_call, option='call')) * btc_equiv
@@ -44,7 +44,7 @@ def risk_reversal(notional, S, K_put, K_call, T, r, sigma_put, sigma_call):
     client_theta = (theta(S, K_put, T, r, sigma_put, option='put')
                    - theta(S, K_call, T, r, sigma_call, option='call')) * btc_equiv
 
-    skew = sigma_put - sigma_call   # this IS the risk reversal's real exposure
+    skew = sigma_put - sigma_call   # skew is the actual thing I'm exposed to here
 
     return {
         'put_price': put_price, 'call_price': call_price, 'net_cost': net_cost,

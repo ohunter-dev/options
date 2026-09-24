@@ -20,11 +20,10 @@ def get_smile(target_days=30, currency='BTC'):
                  key=lambda d: abs(d - target_days))
     T = chosen / 365
 
-        # everything in this expiry, calls and puts both
+    # everything in this expiry, calls and puts
     bucket = [i for i in instruments if round(i['days_to_expiry']) == chosen]
 
-    # keep only the out-of-the-money side at each strike:
-    # puts below spot, calls above. these are the liquid, vega-rich ones.
+    # only keep the OTM side at each strike, puts below spot and calls above. those are the liquid vega heavy ones
     otm = []
     for i in bucket:
         K = i['strike']
@@ -58,7 +57,7 @@ def get_smile(target_days=30, currency='BTC'):
 
     return spot, chosen, results
 
-def interpolate_iv(smile_results, strike): #to interpolate, as clients was 25 delta calls rather than asking for quotes at strike at 77k.
+def interpolate_iv(smile_results, strike): #need this because clients ask for stuff like 25 delta calls, not a quote at a listed strike like 77k
     # smile_results is the list of dicts from get_smile()
     strikes = np.array([row['strike'] for row in smile_results])
     ivs     = np.array([row['iv'] for row in smile_results])
