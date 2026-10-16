@@ -1,5 +1,5 @@
 # Options / Vol Desk - self-study project
-n[![CI](https://github.com/L1quidityHunt3r/options/actions/workflows/ci.yml/badge.svg)](https://github.com/L1quidityHunt3r/options/actions/workflows/ci.yml)
+[![CI](https://github.com/L1quidityHunt3r/options/actions/workflows/ci.yml/badge.svg)](https://github.com/L1quidityHunt3r/options/actions/workflows/ci.yml)
 
 A from-scratch build of the pricing, hedging, and risk-management toolkit used on
 a crypto options desk: Black-Scholes engine, live implied-vol surface construction,
