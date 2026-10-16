@@ -1,29 +1,38 @@
 import numpy as np
-from optlib.bs import bs_price, delta, gamma, vega, theta, vanna, volga
+
+from optlib.bs import bs_price, delta, gamma, theta, vanna, vega, volga
+
 
 def price_position(position, S, r):
     # position is a dict describing one holding: strike, expiry, type, quantity
-    K = position['K']
-    T = position['T']
-    sigma = position['sigma']
-    option = position['type']
-    qty = position['qty']   # positive = long, negative = short
+    K = position["K"]
+    T = position["T"]
+    sigma = position["sigma"]
+    option = position["type"]
+    qty = position["qty"]  # positive = long, negative = short
 
     price = bs_price(S, K, T, r, sigma, option) * qty
     pos_delta = delta(S, K, T, r, sigma, option) * qty
     pos_gamma = gamma(S, K, T, r, sigma) * qty
-    pos_vega  = vega(S, K, T, r, sigma) * qty
+    pos_vega = vega(S, K, T, r, sigma) * qty
     pos_theta = theta(S, K, T, r, sigma, option) * qty
     pos_vanna = vanna(S, K, T, r, sigma) * qty
     pos_volga = volga(S, K, T, r, sigma) * qty
 
-    return {'price': price, 'delta': pos_delta, 'gamma': pos_gamma,
-            'vega': pos_vega, 'theta': pos_theta,
-            'vanna': pos_vanna, 'volga': pos_volga}
+    return {
+        "price": price,
+        "delta": pos_delta,
+        "gamma": pos_gamma,
+        "vega": pos_vega,
+        "theta": pos_theta,
+        "vanna": pos_vanna,
+        "volga": pos_volga,
+    }
+
 
 # price_book just sums every position so I can see the net greeks for the whole book
 def price_book(book, S, r):
-    totals = {'price': 0, 'delta': 0, 'gamma': 0, 'vega': 0, 'theta': 0, 'vanna': 0, 'volga': 0}
+    totals = {"price": 0, "delta": 0, "gamma": 0, "vega": 0, "theta": 0, "vanna": 0, "volga": 0}
 
     for pos in book:
         result = price_position(pos, S, r)
@@ -31,6 +40,7 @@ def price_book(book, S, r):
             totals[key] += result[key]
 
     return totals
+
 
 def scenario_grid(book, spot_range, vol_shift_range, r):
     # spot_range: array of spot levels to test
@@ -43,18 +53,19 @@ def scenario_grid(book, spot_range, vol_shift_range, r):
             shifted_book = []
             for pos in book:
                 shifted_pos = pos.copy()
-                shifted_pos['sigma'] = pos['sigma'] + vol_shift
+                shifted_pos["sigma"] = pos["sigma"] + vol_shift
                 shifted_book.append(shifted_pos)
 
             total = price_book(shifted_book, S, r)
-            results[i, j] = total['price']
+            results[i, j] = total["price"]
 
     return results
 
+
 if __name__ == "__main__":
     book = [
-        {'K': 85000, 'T': 27/365, 'sigma': 0.36, 'type': 'call', 'qty': -10},
-        {'K': 70000, 'T': 27/365, 'sigma': 0.40, 'type': 'put',  'qty': 5},
+        {"K": 85000, "T": 27 / 365, "sigma": 0.36, "type": "call", "qty": -10},
+        {"K": 70000, "T": 27 / 365, "sigma": 0.40, "type": "put", "qty": 5},
     ]
 
     S = 78000
@@ -62,10 +73,13 @@ if __name__ == "__main__":
 
     for pos in book:
         result = price_position(pos, S, r)
-        print(f"K={pos['K']} {pos['type']:>4} qty={pos['qty']:>4}  "
-              f"price={result['price']:>10.2f}  delta={result['delta']:>8.4f}  "
-              f"gamma={result['gamma']:>10.6f}  vega={result['vega']:>8.4f}  theta={result['theta']:>8.4f}"
-              f"volga={result['volga']:>10.6f}  vanna={result['vanna']:>10.6f}")
+        print(
+            f"K={pos['K']} {pos['type']:>4} qty={pos['qty']:>4}  "
+            f"price={result['price']:>10.2f}  delta={result['delta']:>8.4f}  "
+            f"gamma={result['gamma']:>10.6f}  vega={result['vega']:>8.4f}  "
+            f"theta={result['theta']:>8.4f}"
+            f"volga={result['volga']:>10.6f}  vanna={result['vanna']:>10.6f}"
+        )
 
     print("\n--- Book totals ---")
     net = price_book(book, S, r)
@@ -81,5 +95,5 @@ if __name__ == "__main__":
     header = "vol_shift\\spot  " + "  ".join(f"{s:>8}" for s in spot_range)
     print(header)
     for i, vol_shift in enumerate(vol_shift_range):
-            row = "  ".join(f"{grid[i,j]:>8.0f}" for j in range(len(spot_range)))
-            print(f"{vol_shift:>+13.2f}  {row}")
+        row = "  ".join(f"{grid[i, j]:>8.0f}" for j in range(len(spot_range)))
+        print(f"{vol_shift:>+13.2f}  {row}")

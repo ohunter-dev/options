@@ -20,3 +20,10 @@
 
   [tool.ruff]
   line-length = 100
+
+  [tool.ruff.lint]
+  # E/F: errors and Python mistakes, I: import order, B: likely bugs, C4: comprehensions
+  select = ["E", "F", "I", "B", "C4"]
+
+  [tool.pytest.ini_options]
+  testpaths = ["tests"]
