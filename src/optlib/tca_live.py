@@ -1,6 +1,6 @@
 import numpy as np
-from src.data import get_last_trades
-from src.tca import compute_markouts
+
+from optlib.data import get_last_trades
 
 # using the BTC perp, most liquid thing on deribit so best chance of clean frequent trades
 trades = get_last_trades("BTC-PERPETUAL", count=200)
@@ -12,31 +12,33 @@ print(f"Pulled {len(trades)} trades")
 print("First trade:", trades[0])
 print("Last trade:", trades[-1])
 
+
 def markout_from_tape(trades, reference_idx, horizons_seconds):
     ref_trade = trades[reference_idx]
-    ref_time = ref_trade['timestamp']
-    ref_price = ref_trade['price']
-    side = ref_trade['direction']
+    ref_time = ref_trade["timestamp"]
+    ref_price = ref_trade["price"]
+    side = ref_trade["direction"]
 
     results = {}
     for h in horizons_seconds:
-        target_time = ref_time + h * 1000   # convert seconds to ms, Deribit's unit
+        target_time = ref_time + h * 1000  # convert seconds to ms, Deribit's unit
 
         # first trade at or after target_time, best guess at where the market was then
-        future_trades = [t for t in trades if t['timestamp'] >= target_time]
+        future_trades = [t for t in trades if t["timestamp"] >= target_time]
         if not future_trades:
-            results[h] = None   # ran off the end of the data I pulled
+            results[h] = None  # ran off the end of the data I pulled
             continue
 
-        price_at_h = future_trades[0]['price']
+        price_at_h = future_trades[0]["price"]
 
-        if side == 'buy':
+        if side == "buy":
             markout = price_at_h - ref_price
         else:
             markout = ref_price - price_at_h
         results[h] = markout
 
     return results
+
 
 if __name__ == "__main__":
     horizons_seconds = [1, 5, 15, 30, 60]
@@ -49,8 +51,10 @@ if __name__ == "__main__":
             if result[h] is not None:
                 all_results[h].append(result[h])
 
-    print(f"Averaged over trades (sample sizes vary by horizon):\n")
+    print("Averaged over trades (sample sizes vary by horizon):\n")
     for h in horizons_seconds:
         values = all_results[h]
-        print(f"  +{h:>3}s: avg markout = {np.mean(values):>7.2f}   "
-              f"n = {len(values):>4}   std = {np.std(values):>7.2f}")
+        print(
+            f"  +{h:>3}s: avg markout = {np.mean(values):>7.2f}   "
+            f"n = {len(values):>4}   std = {np.std(values):>7.2f}"
+        )

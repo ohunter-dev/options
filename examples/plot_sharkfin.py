@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from src.mc import price_sharkfin
+from optlib.mc import price_sharkfin
 
 S0, K, B, T, r, sigma, rebate = 78000, 78000, 95000, 27/365, 0.0, 0.38, 200
 

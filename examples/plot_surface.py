@@ -1,7 +1,7 @@
 #plotting the surface (get_smile() (IV vs strike) and get_term_structure() (ATM IV vs days))
 import matplotlib.pyplot as plt
-from src.surface import get_smile
-from src.term_structure import get_term_structure
+from optlib.surface import get_smile
+from optlib.term_structure import get_term_structure
 
 spot, days, smile = get_smile(target_days=30)
 _, term = get_term_structure()
