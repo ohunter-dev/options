@@ -1,5 +1,5 @@
-from src.bs import bs_price, delta, gamma, vega, theta
-from src.surface import get_smile, interpolate_iv
+from optlib.bs import bs_price, delta, gamma, vega, theta
+from optlib.surface import get_smile, interpolate_iv
 
 def dual_currency_note(notional, S, K, T, r, sigma): #dual currency note
     call_price = bs_price(S, K, T, r, sigma, option='call')

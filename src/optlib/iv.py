@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.optimize import brentq
-from src.bs import bs_price
+from optlib.bs import bs_price
 
 def implied_vol(market_price, S, K, T, r, option='call'):
     # want the sigma where BS price - market price = 0

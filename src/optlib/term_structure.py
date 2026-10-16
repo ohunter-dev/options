@@ -1,6 +1,6 @@
 import time
-from src.data import get_instruments, get_ticker
-from src.iv import implied_vol
+from optlib.data import get_instruments, get_ticker
+from optlib.iv import implied_vol
 
 def get_term_structure(currency='BTC'):
     instruments = get_instruments(currency)

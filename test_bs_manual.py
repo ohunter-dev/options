@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from src.bs import bs_price, delta, gamma, vega, theta
+from optlib.bs import bs_price, delta, gamma, vega, theta
 
 
 print(bs_price(S=100, K=100, T=1, r=0.05, sigma=0.2, option='call'))
