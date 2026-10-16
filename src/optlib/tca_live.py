@@ -1,6 +1,6 @@
 import numpy as np
-from src.data import get_last_trades
-from src.tca import compute_markouts
+from optlib.data import get_last_trades
+from optlib.tca import compute_markouts
 
 # using the BTC perp, most liquid thing on deribit so best chance of clean frequent trades
 trades = get_last_trades("BTC-PERPETUAL", count=200)

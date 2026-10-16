@@ -1,6 +1,6 @@
 import numpy as np
-from src.bs import bs_price, delta
-from src.mc import gbm_paths
+from optlib.bs import bs_price, delta
+from optlib.mc import gbm_paths
 
 def simulate_hedge_on_path(path, S0, K, T, r, iv_sold, hedge_interval_days, fine_steps, cost_bps=0):
     fine_dt = T / fine_steps

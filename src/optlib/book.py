@@ -1,5 +1,5 @@
 import numpy as np
-from src.bs import bs_price, delta, gamma, vega, theta, vanna, volga
+from optlib.bs import bs_price, delta, gamma, vega, theta, vanna, volga
 
 def price_position(position, S, r):
     # position is a dict describing one holding: strike, expiry, type, quantity
