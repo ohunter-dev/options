@@ -9,25 +9,25 @@ principles, using live BTC/ETH data from Deribit's public API.
 
 ## Structure
 
-- `src/bs.py` - Black-Scholes pricer and all six greeks (delta, gamma, vega,
+- `src/optlib/bs.py` - Black-Scholes pricer and all six greeks (delta, gamma, vega,
   theta, vanna, volga), each validated against numerical finite-difference bumps.
-- `src/data.py` - Deribit public API client (instruments, tickers, trade tape).
-- `src/iv.py` - implied vol solver (Brent's method root-finding).
-- `src/surface.py` - live vol smile construction from OTM options, with
+- `src/optlib/data.py` - Deribit public API client (instruments, tickers, trade tape).
+- `src/optlib/iv.py` - implied vol solver (Brent's method root-finding).
+- `src/optlib/surface.py` - live vol smile construction from OTM options, with
   strike-interpolation for pricing at non-listed strikes.
-- `src/term_structure.py` - ATM implied vol across all listed expiries.
-- `src/products.py` - decomposition and live pricing of dual-currency notes
+- `src/optlib/term_structure.py` - ATM implied vol across all listed expiries.
+- `src/optlib/products.py` - decomposition and live pricing of dual-currency notes
   and risk reversals (reads real market skew via the surface module).
-- `src/mc.py` - GBM path simulation and Monte Carlo pricing of the sharkfin
+- `src/optlib/mc.py` - GBM path simulation and Monte Carlo pricing of the sharkfin
   (up-and-out barrier option) - no closed form under discrete monitoring, so MC.
-- `src/hedging.py` - delta-hedging P&L simulator: sells an option, dynamically
+- `src/optlib/hedging.py` - delta-hedging P&L simulator: sells an option, dynamically
   hedges it along a simulated price path, and decomposes the result into the
   sold-vs-realized-vol identity, hedge-frequency effects, and transaction costs.
-- `src/book.py` - multi-position book aggregation, scenario grids (spot × vol),
+- `src/optlib/book.py` - multi-position book aggregation, scenario grids (spot × vol),
   and full greek stack including vanna/volga.
-- `src/tca.py` / `src/tca_live.py` - mark-out analysis (impact vs information)
+- `src/optlib/tca.py` / `src/optlib/tca_live.py` - mark-out analysis (impact vs information)
   on synthetic and real Deribit trade-tape data.
-- `src/composite_mid.py` - volume-weighted composite mid price across Binance,
+- `src/optlib/composite_mid.py` - volume-weighted composite mid price across Binance,
   Coinbase, and OKX.
 
 ## Running
