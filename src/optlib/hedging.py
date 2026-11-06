@@ -37,7 +37,7 @@ if __name__ == "__main__":
     S0, K, T, r = 78000, 78000, 27 / 365, 0.0
     iv_sold = 0.38
     sigma_realized = 0.55
-    n_runs = 50
+    n_runs = 500
     fine_steps = 648
     cost_bps = 5  # 5bps per trade, roughly what crypto spot spread + fees look like
 
@@ -76,6 +76,15 @@ if __name__ == "__main__":
         hourly_pnls.append(h_pnl)
         hourly_costs.append(h_cost)
 
+    # the vol identity: hedging continuously, the seller loses (or makes) the gap
+    # between the option priced at the vol sold and at the vol realised
+    theory = bs_price(S0, K, T, r, iv_sold, option="call") - bs_price(
+        S0, K, T, r, sigma_realized, option="call"
+    )
+    print(
+        f"sold at {iv_sold:.0%} vol, realised {sigma_realized:.0%}: "
+        f"theory C({iv_sold:.0%}) - C({sigma_realized:.0%}) = {theory:.2f}\n"
+    )
     print(
         f"Daily  | avg pnl: {np.mean(daily_pnls):>10.2f}  std: {np.std(daily_pnls):>10.2f}"
         f"  avg cost paid: {np.mean(daily_costs):>8.2f}"
@@ -84,3 +93,10 @@ if __name__ == "__main__":
         f"Hourly | avg pnl: {np.mean(hourly_pnls):>10.2f}  std: {np.std(hourly_pnls):>10.2f}"
         f"  avg cost paid: {np.mean(hourly_costs):>8.2f}"
     )
+    for label, pnls, costs in [
+        ("Daily", daily_pnls, daily_costs),
+        ("Hourly", hourly_pnls, hourly_costs),
+    ]:
+        gap = np.mean(pnls) + np.mean(costs) - theory
+        se = np.std(pnls) / np.sqrt(n_runs)
+        print(f"{label:<6} | pnl before costs vs theory: {gap:+8.2f}  (std error {se:.2f})")

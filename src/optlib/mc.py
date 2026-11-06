@@ -73,4 +73,5 @@ if __name__ == "__main__":
         n_paths=100000,
     )
     for key, val in result.items():
-        print(f"{key:>15}: {val:.4f}")
+        if np.ndim(val) == 0:  # skip the sample-path arrays, print the scalars
+            print(f"{key:>15}: {val:.4f}")

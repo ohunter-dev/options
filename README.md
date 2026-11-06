@@ -1,88 +1,69 @@
-# Options / Vol Desk - self-study project
+# Options Pricing & Risk Library
 [![CI](https://github.com/ohunter-dev/options/actions/workflows/ci.yml/badge.svg)](https://github.com/ohunter-dev/options/actions/workflows/ci.yml)
 
-A from-scratch build of the pricing, hedging, and risk-management toolkit used on
-a crypto options desk: Black-Scholes engine, live implied-vol surface construction,
-product decomposition (dual-currency notes, risk reversals, sharkfins), a Monte
-Carlo barrier pricer, a delta-hedging simulator, and book-level risk aggregation.
-Built to understand market microstructure and options mechanics from first
-principles, using live BTC/ETH data from Deribit's public API.
+A from-scratch build of the pricing, hedging and risk tools an options desk uses: a Black-Scholes engine with the full Greek stack, implied vol smiles and term structure from live Deribit BTC/ETH data, pricing of the structured products clients actually buy (dual-currency notes, risk reversals, sharkfins), a delta-hedging simulator, and book-level risk with scenario grids. Every analytical Greek is tested against a finite-difference bump.
 
-## Structure
+## Example: what delta hedging actually earns
 
-- `src/optlib/bs.py` - Black-Scholes pricer and all six greeks (delta, gamma, vega,
-  theta, vanna, volga), each validated against numerical finite-difference bumps.
-- `src/optlib/data.py` - Deribit public API client (instruments, tickers, trade tape).
-- `src/optlib/iv.py` - implied vol solver (Brent's method root-finding).
-- `src/optlib/surface.py` - live vol smile construction from OTM options, with
-  strike-interpolation for pricing at non-listed strikes.
-- `src/optlib/term_structure.py` - ATM implied vol across all listed expiries.
-- `src/optlib/products.py` - decomposition and live pricing of dual-currency notes
-  and risk reversals (reads real market skew via the surface module).
-- `src/optlib/mc.py` - GBM path simulation and Monte Carlo pricing of the sharkfin
-  (up-and-out barrier option) - no closed form under discrete monitoring, so MC.
-- `src/optlib/hedging.py` - delta-hedging P&L simulator: sells an option, dynamically
-  hedges it along a simulated price path, and decomposes the result into the
-  sold-vs-realized-vol identity, hedge-frequency effects, and transaction costs.
-- `src/optlib/book.py` - multi-position book aggregation, scenario grids (spot × vol),
-  and full greek stack including vanna/volga.
-- `src/optlib/tca.py` / `src/optlib/tca_live.py` - mark-out analysis (impact vs information)
-  on synthetic and real Deribit trade-tape data.
-- `src/optlib/composite_mid.py` - volume-weighted composite mid price across Binance,
-  Coinbase, and OKX.
-
-## Running
-
-Each module can be run directly to see its own worked example, e.g.:
+`python -m optlib.hedging` sells a 27-day at-the-money BTC call at 38% vol, then hedges it along 500 simulated paths where the market actually realises 55%, paying 5bp per hedge trade:
 
 ```
-python -m src.bs
-python -m src.surface
-python -m src.hedging
-python -m src.book
-python -m src.tca_live
+sold at 38% vol, realised 55%: theory C(38%) - C(55%) = -1435.86
+
+Daily  | avg pnl:   -1545.51  std:    1074.35  avg cost paid:    95.68
+Hourly | avg pnl:   -1853.62  std:     888.59  avg cost paid:   399.52
+Daily  | pnl before costs vs theory:   -13.97  (std error 48.05)
+Hourly | pnl before costs vs theory:   -18.24  (std error 39.74)
 ```
 
-Set up the environment first:
+**Reading it.** An option seller who delta hedges is short realised vol. Selling at 38% when the market moves at 55% should lose the difference between the option priced at the two vols, about 1,436 per contract. Before costs, the simulation lands within one standard error of that number at both hedge frequencies, which checks the pricer, the Greeks and the hedging loop against each other. Hedging hourly instead of daily cuts the spread of outcomes (std 889 vs 1,074) but costs four times as much in fees. That trade-off is the real decision a desk makes.
+
+## Setup
+
 ```
-uv venv
-uv pip install -r requirements.txt
+uv sync --group dev
+uv run pytest -q
 ```
+
+Without uv: `pip install -e .` then `pip install pytest`. Each module runs its own worked example:
+
+```
+uv run python -m optlib.bs        # Greeks vs finite-difference bumps
+uv run python -m optlib.mc        # GBM check, then the sharkfin price
+uv run python -m optlib.hedging   # the example above
+uv run python -m optlib.book      # book Greeks and a spot x vol scenario grid
+uv run python -m optlib.surface   # live: needs internet access to Deribit
+uv run python -m optlib.products  # live: dual-currency note and risk reversal
+```
+
+## Modules
+
+| File | What it does |
+| --- | --- |
+| `bs.py` | Black-Scholes price and six Greeks (delta, gamma, vega, theta, vanna, volga) |
+| `iv.py` | Implied vol solver (Brent's method) |
+| `data.py` | Deribit public API client: instruments, tickers, trade tape |
+| `surface.py` | Live vol smile from out-of-the-money options, interpolated to any strike |
+| `term_structure.py` | At-the-money implied vol across all listed expiries |
+| `products.py` | Dual-currency notes and risk reversals, broken into vanillas and priced off the live smile |
+| `mc.py` | GBM path simulation and Monte Carlo pricing of the sharkfin (up-and-out call with rebate) |
+| `hedging.py` | Delta-hedging simulator: realised vs sold vol, hedge frequency and transaction costs |
+| `book.py` | Multi-position book: aggregate Greeks and spot x vol scenario grids |
+| `tca.py` / `tca_live.py` | Mark-outs on synthetic and real Deribit trades: does the price revert (impact) or keep going (information)? |
+| `composite_mid.py` | Volume-weighted mid across Binance, Coinbase and OKX |
+
+## Testing
+
+48 parametrised test cases in `tests/test_bs.py` check every analytical Greek against a numerical bump, plus put-call parity, delta parity and dividend cases. CI runs `ruff` and `pytest` on Python 3.11 and 3.12 on every push.
 
 ## Known simplifications
 
-Stuff I've simplified on purpose, written down so it doesn't look like a bug:
+Things simplified on purpose, written down so they don't look like bugs:
 
-- **r = 0 throughout.** Matches Deribit's own convention (`interest_rate: 0.0`
-  in every ticker response) - not an approximation for this venue, but worth
-  flagging since it wouldn't hold on a rates-bearing instrument.
-- **Options are priced off the forward, not spot**, using each instrument's
-  own `underlying_price` from its ticker. Pricing off spot directly produces a
-  visible kink at the ATM put/call boundary (documented via the debugging
-  process in commit history) - using the correct per-expiry forward removes it.
-- **No inverse/BTC-settlement adjustment.** Deribit's BTC options settle and
-  are margined in BTC, not USD. This project treats them as standard USD-
-  denominated vanillas after converting the BTC-denominated mark price to USD
-  at the prevailing forward. Doing it properly means changing the numeraire
-  itself, so I know this is an approximation.
-- **Barrier monitoring in the Monte Carlo sharkfin pricer is discrete**
-  (checked once per simulated time step), not continuous. This understates
-  the true knock-out probability relative to continuous monitoring. The
-  standard correction (Broadie-Glasserman-Kou barrier shift) is not applied.
-- **The composite mid has no staleness filtering or outlier rejection** - it
-  is a single live pull, volume-weighted across three venues, intended as a
-  proof of the weighting mechanism rather than a production-grade index.
-- **Vol surface interpolation is linear** (`np.interp`) between listed
-  strikes, and flat-extrapolates outside the observed strike range. A
-  production surface would use an arbitrage-free parametric fit (e.g. SVI).
-
-## What this demonstrates
-
-The main thing this project is about: vanilla risk (delta, gamma,
-vega, theta, and their second-order extensions vanna/volga) is hedgeable with
-the underlying and other vanillas. Path-dependent risk (a barrier) is much
-harder to hedge with vanillas, and with the barrier checked at discrete points
-there's no closed form, so the sharkfin gets priced with Monte Carlo instead, rather than a straight extension of Black-Scholes
-I went with MC mainly to learn path simulation. The faster production route
-would be the continuous-monitoring closed form (Reiner-Rubinstein) with the
-Broadie-Glasserman-Kou barrier shift to adjust for discrete monitoring.
+- **r = 0 throughout.** This matches Deribit's own convention (`interest_rate: 0.0` in every ticker), but wouldn't hold for a rates-bearing underlying.
+- **Options are priced off each expiry's forward, not spot**, using the instrument's own `underlying_price`. Pricing off spot produced a visible kink at the at-the-money put/call boundary; using the forward removes it.
+- **No inverse settlement adjustment.** Deribit BTC options settle in BTC. They're treated here as USD vanillas after converting the mark price at the forward. Doing it properly means changing the numeraire.
+- **The sharkfin barrier is checked once per time step**, not continuously, which understates the knock-out probability. The standard fix (the Broadie-Glasserman-Kou barrier shift) isn't applied, and the faster production route would be the closed form (Reiner-Rubinstein) with that shift. Monte Carlo was chosen here to learn path simulation.
+- **The hedging simulator uses GBM paths at a constant realised vol**, so it shows the vol identity cleanly but not jumps or vol-of-vol, which is where real hedging losses come from.
+- **Vol smile interpolation is linear** between listed strikes and flat outside them. A production surface would use an arbitrage-free fit such as SVI.
+- **The composite mid has no staleness or outlier filtering.** It's a single live pull showing the weighting, not a production index.
